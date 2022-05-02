@@ -1,0 +1,191 @@
+from tkinter import *
+from tkinter import ttk
+import tkinter.messagebox
+import pymysql
+import mysql.connector
+
+class ConnectorDB:
+    def __init__(self, root):
+        self.root = root
+        titlespace =" "
+        self.root.title(102 * titlespace + "CRUD.EXE")
+        self.root.geometry("770x700+300+0")
+        self.root.resizable(width=False, height=False)
+
+        MainFrame = Frame(self.root, bd=10, width=770, height=700, relief=RIDGE, bg='blue')
+        MainFrame.grid()
+
+        TitleFrame = Frame(MainFrame, bd=7, width = 770, height=100, relief=RIDGE)
+        TitleFrame.grid(row=0, column=0)
+        TopFrame3= Frame(MainFrame, bd=5, width = 770, height=500, relief=RIDGE)
+        TopFrame3.grid(row=1,column=0)
+
+        LeftFrame = Frame(TopFrame3, bd=5, width = 770, height=400, padx=2, relief=RIDGE, bg="blue")
+        LeftFrame.pack(side=LEFT)
+        LeftFrame1 = Frame(LeftFrame,bd=5, width = 600, height=180, padx=12, pady=9, relief=RIDGE)
+        LeftFrame1.pack(side=TOP)
+
+        RightFrame1 = Frame(TopFrame3, bd=5, width = 100, height=400, padx=2, relief=RIDGE, bg ="blue")
+        RightFrame1.pack(side=RIGHT)
+        RightFrame1a = Frame(RightFrame1 , bd=5, width=90, height=300, padx=2, pady=2, relief=RIDGE)
+        RightFrame1a.pack(side=TOP)
+
+        #----------Variable Declarations-----#
+
+        SupplierID= StringVar()
+        SupplierName=StringVar()
+        SupplierContact=StringVar()
+        SupplierAddress=StringVar()
+        #----------------Exit--------------#
+        def iExit():
+            iExit = tkinter.messagebox.askyesno( "Confirm if you want to Exit")
+            if iExit >0:
+                root.destroy()
+                return
+        def Reset():
+            self.entSupplierID.delete(0,END)
+            self.entSupplierName.delete(0, END)
+            self.entSupplierContact.delete(0, END)
+            self.entSupplierAddress.delete(0, END)
+        def addData():
+            if SupplierID.get()=="" or SupplierName.get()=="":
+                tkinter.messagebox.showerror("Enter Correct Data")
+            else:
+                sqlcon = mysql.connector.connect(host="localhost", user="root", password="Samurott123",port="3306",database="hardware")
+                cur=sqlcon.cursor()
+                cur.execute("insert into supplier values(%s,%s,%s,%s)",(
+                SupplierID.get(),
+                SupplierName.get(),
+                SupplierContact.get(),
+                SupplierAddress.get(),
+                ))
+                sqlcon.commit()
+                sqlcon.close()
+                tkinter.messagebox.showinfo("Supplier","Record Entered")
+
+        def displayData():
+            sqlcon = mysql.connector.connect(host="localhost", user="root", password="Samurott123", port="3306",
+                                             database="hardware")
+            cur = sqlcon.cursor()
+            cur.execute("select * from supplier")
+            result = cur.fetchall()
+            if len(result) !=0:
+                self.supplier_records.delete(*self.supplier_records.get_children())
+                for row in result:
+                    self.supplier_records.insert('',END,values =row)
+            sqlcon.commit()
+            sqlcon.close()
+            tkinter.messagebox.showinfo("Supplier", "Record Displayed")
+
+        def supplierInfo(ev):
+            viewInfo = self.supplier_records.focus()
+            SupplierData=self.supplier_records.item(viewInfo)
+            row = SupplierData['values']
+            SupplierID.set(row[0])
+            SupplierName.set(row[1])
+            SupplierContact.set(row[2])
+            SupplierAddress.set(row[3])
+
+        def update():
+            sqlcon = mysql.connector.connect(host="localhost", user="root", password="Samurott123", port="3306", database="hardware")
+            cur = sqlcon.cursor()
+            cur.execute("update supplier set SupplierName=%s, SupplierContact=%s, SupplierAddress=%s where SupplierID=%s",(
+            SupplierName.get(),
+            SupplierContact.get(),
+            SupplierAddress.get(),
+            SupplierID.get()
+            ))
+            sqlcon.commit()
+            displayData()
+            sqlcon.close()
+            tkinter.messagebox.showinfo("Supplier", "Record Updated")
+
+        def delete():
+            sqlcon = mysql.connector.connect(host="localhost", user="root", password="Samurott123", port="3306", database="hardware")
+            cur = sqlcon.cursor()
+
+            cur.execute("delete from supplier where SupplierID=%s",SupplierID.get())
+
+            sqlcon.commit()
+            displayData()
+            sqlcon.close()
+            tkinter.messagebox.showinfo("Supplier", "Record Deleted")
+
+        def search():
+            try:
+                sqlcon = mysql.connector.connect(host="localhost", user="root", password="Samurott123", port="3306",database="hardware")
+                cur = sqlcon.cursor()
+
+                cur.execute("select* from supplier where SupplierID=%s", SupplierID.get())
+                row=cur.fetchall()
+
+                SupplierID.set(row[0])
+                SupplierName.set(row[1])
+                SupplierContact.set(row[2])
+                SupplierAddress.set(row[3])
+
+                sqlcon.commit()
+            except:
+                tkinter.messagebox.showinfo("Supplier", "No such Record Found")
+                Reset()
+            sqlcon.close()
+
+
+        #=================================#
+        self.lbltitle=Label(TitleFrame, font=('arial',40,'bold'),text='SUPPLIER',bd=7)
+        self.lbltitle.grid(row=0, column=0, padx=132)
+        #=================================#
+        self.lblSupplierID= Label(LeftFrame1, font=('arial', 12, 'bold'), text='SupplierID')
+        self.lblSupplierID.grid(row=0, column=0, sticky=W, padx=5)
+        self.entSupplierID = Entry(LeftFrame1,font = ('arial', 12, 'bold'),bd = 5, width=30, justify='left', textvariable=SupplierID)
+        self.entSupplierID.grid(row=0, column=1, sticky=W, padx=5)
+
+        self.lblSupplierName = Label(LeftFrame1, font=('arial', 12, 'bold'), text='SupplierName')
+        self.lblSupplierName.grid(row=1, column=0, sticky=W, padx=5)
+        self.entSupplierName = Entry(LeftFrame1, font=('arial', 12, 'bold'), bd=5, width=30, justify='left', textvariable=SupplierName)
+        self.entSupplierName.grid(row=1, column=1, sticky=W, padx=5)
+
+        self.lblSupplierContact= Label(LeftFrame1, font=('arial', 12, 'bold'), text='SupplierContact')
+        self.lblSupplierContact.grid(row=2, column=0, sticky=W, padx=5)
+        self.entSupplierContact= Entry(LeftFrame1, font=('arial', 12, 'bold'), bd=5, width=30, justify='left', textvariable=SupplierContact)
+        self.entSupplierContact.grid(row=2, column=1, sticky=W, padx=5)
+
+        self.lblSupplierAddress = Label(LeftFrame1, font=('arial', 12, 'bold'), text='SupplierAddress')
+        self.lblSupplierAddress.grid(row=3, column=0, sticky=W, padx=5)
+        self.entSupplierAddress = Entry(LeftFrame1, font=('arial', 12, 'bold'), bd=5, width=44, justify='left', textvariable=SupplierAddress)
+        self.entSupplierAddress.grid(row=3, column=1, sticky=W, padx=5)
+
+        #----------------------Treeview-----------#
+        scroll_y=Scrollbar(LeftFrame, orient =VERTICAL)
+        self.supplier_records=ttk.Treeview(LeftFrame, height=12, columns=("Supplier_ID", "Supplier_Name", "Supplier_Contact","Supplier_Address"),yscrollcommand=scroll_y.set)
+
+        scroll_y.pack(side = RIGHT, fill=Y)
+        self.supplier_records.heading("Supplier_ID", text="Supplier_ID")
+        self.supplier_records.heading("Supplier_Name", text="Supplier_Name")
+        self.supplier_records.heading("Supplier_Contact", text="Supplier_Contact")
+        self.supplier_records.heading("Supplier_Address", text="Supplier_Address")
+
+        self.supplier_records['show']='headings'
+
+        self.supplier_records.column("Supplier_ID", width =70)
+        self.supplier_records.column("Supplier_Name", width=100)
+        self.supplier_records.column("Supplier_Contact", width=100)
+        self.supplier_records.column("Supplier_Address", width=100)
+
+        self.supplier_records.pack(fill = BOTH, expand=1)
+        self.supplier_records.bind("<ButtonRelease-1>",supplierInfo)
+        displayData()
+
+    #----------Button Creations--------------#
+        self.btnAddNew=Button(RightFrame1a,font=('arial',12,'bold'),text="Add", bd=4, pady=1, width= 8, height= 2, padx=24, command=addData).grid(row=0, column=0, padx=1)
+        self.btnAddNew=Button(RightFrame1a,font=('arial',12,'bold'),text="Display", bd=4, pady=1, width= 8, height= 2, padx=24, command=displayData).grid(row=1, column=0, padx=1)
+        self.btnAddNew=Button(RightFrame1a,font=('arial',12,'bold'),text="Update", bd=4, pady=1, width= 8, height= 2, padx=24, command=update).grid(row=2, column=0, padx=1)
+        self.btnAddNew=Button(RightFrame1a,font=('arial',12,'bold'),text="Delete", bd=4, pady=1, width= 8, height= 2, padx=24, command=delete).grid(row=3, column=0, padx=1)
+        self.btnAddNew=Button(RightFrame1a,font=('arial',12,'bold'),text="Search", bd=4, pady=1, width= 8, height= 2, padx=24, command=search).grid(row=4, column=0, padx=1)
+        self.btnAddNew=Button(RightFrame1a,font=('arial',12,'bold'),text="Reset", bd=4, pady=1, width= 8, height= 2, padx=24, command=Reset).grid(row=5, column=0, padx=1)
+        self.btnAddNew=Button(RightFrame1a,font=('arial',12,'bold'),text="Exit", bd=4, pady=1, width= 8, height= 2, padx=24, command=iExit).grid(row=6, column=0, padx=1)
+
+if __name__=='__main__':
+    root = Tk()
+    application = ConnectorDB(root)
+    root.mainloop()
